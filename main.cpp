@@ -3,6 +3,7 @@
 #include <cstring>
 #include <libusb-1.0/libusb.h>
 #include <string>
+#include "CLI11.hpp"
 
 int map(int x, int in_min, int in_max, int out_min, int out_max)
 {
@@ -36,6 +37,18 @@ void transferPacket(libusb_device_handle *dev_handle, uint8_t *packet, size_t pa
 
 int main(int argc, char **argv)
 {
+    CLI::App app{"psvrtool"};
+
+    CLI::App* cinemaModeCmd = app.add_subcommand("cinema_mode", "Render HDMI input as a flat 2D screen, with tracking and morphing handled by the processor unit");
+    int brightness = 35;
+    int screen_size = 35;
+    cinemaModeCmd->add_option("-b,--brightness", brightness, "Brightness of the screen (percentage, 0-100)")->required(false);
+    cinemaModeCmd->add_option("-s,--screen-size", screen_size, "Size of the screen (percentage, 0-100)")->required(false);
+
+    app.add_subcommand("poweroff", "Power off the PSVR headset and processor unit");
+
+    CLI11_PARSE(app, argc, argv);
+
     libusb_init(NULL);
     libusb_device_handle *dev_handle = libusb_open_device_with_vid_pid(NULL, 0x054c, 0x09af);
 
@@ -57,7 +70,7 @@ int main(int argc, char **argv)
 
     uint8_t *packet = new uint8_t[256];
 
-    if (strstr(argv[1], "cinema_mode"))
+    if (app.got_subcommand("cinema_mode"))
     {
         std::cout << "Setting cinema mode\n";
         // Disable VR mode
@@ -78,15 +91,15 @@ int main(int argc, char **argv)
             uint8_t reserved2[4];
         } cinemaPayload;
         cinemaPayload.mask = 255;
-        cinemaPayload.screen_size = map(std::stoi(argv[2]), 0, 100, 26, 100);
+        cinemaPayload.screen_size = map(screen_size, 0, 100, 26, 100);
         cinemaPayload.screen_distance = 0;
         cinemaPayload.interpupillary_distance = 0;
-        cinemaPayload.brightness = map(std::stoi(argv[3]), 0, 100, 0, 32);
+        cinemaPayload.brightness = map(brightness, 0, 100, 0, 32);
         cinemaPayload.mic_volume = 127;
         packetLen = genPacket(packet, 0x21, (uint8_t *)&cinemaPayload, 16);
         transferPacket(dev_handle, packet, packetLen);
     }
-    else if(strstr(argv[1],"poweroff")) {
+    else if(app.got_subcommand("poweroff")) {
         std::cout << "Powering off\n";
         uint32_t poweroffPayload = 0x01;
         size_t packetLen = genPacket(packet, 0x13, (uint8_t*)&poweroffPayload, 4);
