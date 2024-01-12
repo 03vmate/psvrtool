@@ -42,8 +42,8 @@ int main(int argc, char **argv)
     CLI::App* cinemaModeCmd = app.add_subcommand("cinema_mode", "Render HDMI input as a flat 2D screen, with tracking and morphing handled by the processor unit");
     int brightness = 35;
     int screen_size = 35;
-    cinemaModeCmd->add_option("-b,--brightness", brightness, "Brightness of the screen (percentage, 0-100)")->required(false)->check(CLI::Range(0, 100));
-    cinemaModeCmd->add_option("-s,--screen-size", screen_size, "Size of the screen (percentage, 0-100)")->required(false)->check(CLI::Range(0, 100));
+    cinemaModeCmd->add_option("-b,--brightness", brightness, "Brightness of the screen (percentage, 0-100). Defaults to 35%")->required(false)->check(CLI::Range(0, 100));
+    cinemaModeCmd->add_option("-s,--screen-size", screen_size, "Size of the screen (percentage, 0-100). Defaults to 35%")->required(false)->check(CLI::Range(0, 100));
 
     app.add_subcommand("poweroff", "Power off the PSVR headset and processor unit");
 
